@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Real-Time Polling App</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="/socket.io/socket.io.js"></script>
+       <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <h1>📊 Real-Time Polling App</h1>
+
+    <div class="username-box">
+        <input type="text" id="usernameInput" placeholder="Enter your name..."/>
+    </div>
+
+    <div class="container">
+        <div class="left-column">
+            <div class="poll-box">
+                <h2>Create New Poll</h2>
+                <form id="createPollForm" name="frm">
+                    <input class="check" type="text" id="pollQuestion" placeholder="Enter your question...">
+                    <div id="optionsContainer">
+                        <input class="check" type="text" name="option" placeholder="Option 1">
+                        <input class="check" type="text" name="option" placeholder="Option 2">
+                    </div>
+                    <button id="addOp" type="button">➕ Add Option</button><br>
+                    <button type="submit">✅ Create Poll</button>
+                </form>
+            </div>
+
+            <div class="poll-box" id="pollForm" style="display:none;">
+                <div id="pollQuestionDisplay"></div>
+                <form id="voteForm">
+                    <div id="pollOptions"></div>
+                    <button type="submit" id="voteButton">🗳️ Vote</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="right-column">
+            <div class="poll-box">
+                <canvas id="pollChart"></canvas>
+            </div>
+            <div class="poll-box">
+                <button id="toggleUserVotes" style="margin-bottom:10px;">Show Votes</button>
+                <div id="userVotes" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+ 
+
+</body>
+
+</html>
