@@ -1,58 +1,93 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <title>Real-Time Polling App</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="/socket.io/socket.io.js"></script>
-       <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f6fa">
+  <meta name="description" content="Create polls, invite people to vote, and follow the results live.">
+  <title>Pulse — polls that move with the room</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="/socket.io/socket.io.js" defer></script>
+  <script src="script.js" defer></script>
 </head>
-
 <body>
-    <h1>📊 Real-Time Polling App</h1>
+  <div class="site-shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Pulse home"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>pulse<span class="brand-dot">.</span></span></a>
+      <nav class="top-actions" aria-label="Account">
+        <span class="connection"><i id="connectionDot"></i><span id="connectionLabel">Connecting</span></span>
+        <div id="guestActions" class="account-actions"><button class="button button-quiet" id="loginButton" type="button">Log in</button><button class="button button-small" id="signupButton" type="button">Sign up</button></div>
+        <div id="memberActions" class="account-actions" hidden><span class="member-greeting">Hi, <strong id="memberName"></strong></span><button class="button button-quiet" id="logoutButton" type="button">Log out</button></div>
+      </nav>
+    </header>
 
-    <div class="username-box">
-        <input type="text" id="usernameInput" placeholder="Enter your name..."/>
-    </div>
-
-    <div class="container">
-        <div class="left-column">
-            <div class="poll-box">
-                <h2>Create New Poll</h2>
-                <form id="createPollForm" name="frm">
-                    <input class="check" type="text" id="pollQuestion" placeholder="Enter your question...">
-                    <div id="optionsContainer">
-                        <input class="check" type="text" name="option" placeholder="Option 1">
-                        <input class="check" type="text" name="option" placeholder="Option 2">
-                    </div>
-                    <button id="addOp" type="button">➕ Add Option</button><br>
-                    <button type="submit">✅ Create Poll</button>
-                </form>
-            </div>
-
-            <div class="poll-box" id="pollForm" style="display:none;">
-                <div id="pollQuestionDisplay"></div>
-                <form id="voteForm">
-                    <div id="pollOptions"></div>
-                    <button type="submit" id="voteButton">🗳️ Vote</button>
-                </form>
-            </div>
+    <main>
+      <section id="homeView" class="home-view">
+        <div class="hero">
+          <div class="hero-copy">
+            <div class="eyebrow"><span></span> DECIDE TOGETHER</div>
+            <h1>Good questions.<br><em>Clear answers.</em></h1>
+            <p>Make a poll, bring everyone in, and watch the room find its answer.</p>
+            <button class="button button-primary hero-button" id="heroCreateButton" type="button">Create a poll <span aria-hidden="true">↗</span></button>
+          </div>
+          <div class="hero-art" aria-hidden="true">
+            <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+            <div class="art-card art-card-main"><span class="art-kicker">THE GROUP HAS SPOKEN</span><strong>Where to<br>next?</strong><div class="art-choice winner"><span>Mountains</span><b>68%</b><i style="width:68%"></i></div><div class="art-choice"><span>Ocean</span><b>32%</b><i style="width:32%"></i></div></div>
+            <div class="art-chip chip-one">✳ &nbsp; 12 votes</div><div class="art-chip chip-two">↗ &nbsp; live</div>
+            <div class="art-orb">✦</div>
+          </div>
         </div>
 
-        <div class="right-column">
-            <div class="poll-box">
-                <canvas id="pollChart"></canvas>
-            </div>
-            <div class="poll-box">
-                <button id="toggleUserVotes" style="margin-bottom:10px;">Show Votes</button>
-                <div id="userVotes" style="display:none;"></div>
-            </div>
-        </div>
-    </div>
-    <script src="script.js"></script>
- 
+        <section class="poll-library" aria-labelledby="libraryTitle">
+          <div class="library-heading">
+            <div><div class="eyebrow eyebrow-muted">THE COMMUNITY</div><h2 id="libraryTitle">Polls in the room<span class="heading-dot">.</span></h2></div>
+            <label class="search-box"><span aria-hidden="true">⌕</span><input id="searchInput" type="search" placeholder="Search polls" autocomplete="off"></label>
+          </div>
+          <div class="library-toolbar"><div class="filter-tabs" role="group" aria-label="Filter polls"><button type="button" class="filter-tab active" data-scope="all">All polls</button><button type="button" class="filter-tab" data-scope="mine" id="mineTab">My polls</button></div><span id="pollCount" class="poll-count"></span></div>
+          <div id="pollGrid" class="poll-grid" aria-live="polite"><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div></div>
+        </section>
+      </section>
 
+      <section id="detailView" class="detail-view" hidden>
+        <button id="backButton" class="back-button" type="button"><span aria-hidden="true">←</span> All polls</button>
+        <div id="detailContent" class="detail-content"></div>
+      </section>
+    </main>
+    <footer class="site-footer"><a class="brand brand-footer" href="/">pulse<span class="brand-dot">.</span></a><span>Better decisions start with a question.</span><span>✳ &nbsp; Made for the moment</span></footer>
+  </div>
+
+  <dialog id="authDialog" class="modal">
+    <form method="dialog"><button class="modal-close" aria-label="Close" value="cancel">×</button></form>
+    <div class="modal-brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span> pulse<span class="brand-dot">.</span></div>
+    <p class="modal-eyebrow">YOUR CORNER OF THE ROOM</p><h2 id="authTitle">Welcome back.</h2><p id="authSubtitle" class="modal-subtitle">Sign in to vote and keep your polls close.</p>
+    <div class="auth-switch"><button class="auth-mode active" type="button" data-mode="login">Log in</button><button class="auth-mode" type="button" data-mode="register">Create account</button></div>
+    <form id="authForm" class="modal-form" novalidate>
+      <label id="authNameField" class="form-field" hidden><span>Your name</span><input id="authName" type="text" maxlength="40" autocomplete="name" placeholder="How should we call you?"></label>
+      <label class="form-field"><span>Email</span><input id="authEmail" type="email" maxlength="254" autocomplete="email" placeholder="you@example.com" required></label>
+      <label class="form-field"><span>Password</span><input id="authPassword" type="password" minlength="8" maxlength="128" autocomplete="current-password" placeholder="At least 8 characters" required></label>
+      <p id="authMessage" class="form-message" role="status"></p>
+      <button id="authSubmit" class="button button-primary modal-submit" type="submit">Log in</button>
+    </form>
+  </dialog>
+
+  <dialog id="createDialog" class="modal create-modal">
+    <form method="dialog"><button class="modal-close" aria-label="Close" value="cancel">×</button></form>
+    <p class="modal-eyebrow">START A CONVERSATION</p><h2>Create a poll.</h2><p class="modal-subtitle">A good question makes every choice easier.</p>
+    <form id="createForm" class="modal-form" novalidate>
+      <label class="form-field"><span>Your question</span><input id="pollQuestion" type="text" maxlength="180" placeholder="What should we decide?" required></label>
+      <div class="option-title"><span>Answer choices</span><span id="optionCount">2 of 8</span></div>
+      <div id="optionsContainer" class="create-options">
+        <div class="create-option-row"><span class="choice-letter">A</span><input class="choice-input" name="option" maxlength="80" placeholder="First choice" required><button class="remove-choice" type="button" disabled aria-label="Remove choice">×</button></div>
+        <div class="create-option-row"><span class="choice-letter">B</span><input class="choice-input" name="option" maxlength="80" placeholder="Second choice" required><button class="remove-choice" type="button" disabled aria-label="Remove choice">×</button></div>
+      </div>
+      <button id="addOptionButton" class="add-choice" type="button">＋ Add another choice</button>
+      <p id="createMessage" class="form-message" role="status"></p>
+      <button class="button button-primary modal-submit" type="submit">Publish poll <span aria-hidden="true">↗</span></button>
+    </form>
+  </dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </body>
-
 </html>
